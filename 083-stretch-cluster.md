@@ -1,6 +1,6 @@
 # Stretch Kafka cluster
 
-The Strimzi Kafka operator currently manages Kafka clusters within a single Kubernetes environment. This proposal aims to extend support to stretch Kafka clusters, where brokers and controllers are distributed across multiple Kubernetes clusters.
+The Strimzi Kafka operator currently manages Kafka clusters within a single Kubernetes cluster. This proposal aims to extend support to stretch Kafka clusters, where brokers and controllers of a single Kafka cluster are distributed across multiple Kubernetes clusters.
 
 ## Current situation
 
@@ -8,7 +8,9 @@ At present, the availability of Strimzi-managed Kafka clusters is directly tied 
 
 ## Motivation
 
-By distributing Kafka nodes across multiple clusters, a stretch Kafka cluster can tolerate outages of individual Kubernetes clusters and will continue to serve clients seamlessly even if one of the clusters goes down. 
+By evenly distributing Kafka nodes across multiple Kubernetes clusters, a stretch Kafka cluster can tolerate outages of individual Kubernetes clusters, and continue to serve clients seamlessly.
+
+Stretch Kafka cluster will provide strong data durability resulting from to synchronous replication across brokers in different Kubernetes clusters. This will enable quick disaster recovery with automated client failover.
 
 ## Proposal
 
@@ -18,21 +20,27 @@ This proposal seeks to enhance the Strimzi Kafka operator to support stretch Kaf
 
 - **Multiple Kubernetes Clusters**: Stretch Kafka clusters will require multiple Kubernetes clusters. Ideally, an odd number of clusters (at least three) is needed to maintain quorum in the event of a cluster outage.
 
-- **Low Latency**: Kafka clusters should be deployed in environments that allow low-latency communication between Kafka brokers and controllers. Stretch Kafka clusters should be deployed in environments such as data centers or availability zones within a single region, and not across distant regions where high latency could impair performance.
+- **Low Latency**: Kafka clusters should be deployed in environments that allow low-latency communication between Kafka brokers and controllers. Stretch Kafka clusters should be deployed in low-latency environments such as geographically close data centers (availability zones) only and not in high-latency environments like multi-region (e.g. separate geographic areas).
+
+- **Consistent networking/infrastructure setip**: All Kubernetes clusters should have comparable networkign and infrastructure setup, such that a common approach can be used across all Kubernets clusters for configuring services that depend on underlying infrastructure.
 
 - **KRaft**: As Kafka and Strimzi transition towards KRaft-based clusters, this proposal focuses exclusively on enabling stretch deployments for KRaft-based Kafka clusters. While Zookeeper-based deployments are still supported, they are outside the scope of this proposal.
 
 ### Design
 
-The cluster operator will be deployed in all Kubernetes clusters and will manage Kafka brokers/controllers running on that cluster. One Kubernetes cluster will act as the control point for defining custom resources (Kafka, KafkaNodePool) required for stretch Kafka cluster. The KafkaNodePool custom resource will be extended to include information about a Kubernetes cluster where the pool should be deployed. The cluster operator will create necessary resources (StrimziPodSets, services etc.) on the target clusters specified within the KafkaNodePool resource.
+One Kubernetes cluster will act as the control point for defining custom resources (Kafka, KafkaNodePool) required for stretch Kafka cluster. This approach will allow users to specify/manage the definition of stretch Kafka cluster in a single location.
 
-This approach will allow users to specify/manage the definition of stretch Kafka cluster in a single location. The operators will then create necessary resources in target Kubernetes clusters, which can then be reconciled/managed by operators on those clusters.
+The central Kubernetes cluster will have the cluster operator runnig as usual to reoncile all Strimzi resource (Kafka, KafkanodePool, StrimziPodSet etc.). This cluster operator will have a complete view of the stretch cluster and will setup StrimziPodSets, configuration, and services on all Kubernetes clusters using information from Kafka and KafkaNodePool resources.
+
+Other Kubernetes clusters will have the StrimziPodSet controller running and it will create and manage pods as per the definition created by hte central cluster operator. These controlles will be able to manage running pods independently of other Kubernetes clusters.
+
+This approach will allow users to specify/manage the definition of stretch Kafka cluster in a single location. The central cluster operator will then create necessary resources in target Kubernetes clusters, which can then be reconciled/managed by operators on those clusters.
 
 ### Reconciling Kafka and KafkaNodePool resources
-<img width="1321" alt="image" src="https://media.github.ibm.com/user/473362/files/0a1a4e7f-8227-47da-86b1-4b27a83fdb9d">
+<img width="1321" alt="image" src="reconciling-1.png">
 
 ### Reconciling StrimziPodSet resources
-<img width="1317" alt="image" src="https://media.github.ibm.com/user/473362/files/f4524847-3c9c-4a8c-a5fd-4a76b6ec0bf4">
+<img width="1317" alt="image" src="reconciling-2.png">
 
 #### KafkaNodePool changes
 A new optional field (`target`) will be introduced in the KafkaNodePool resource specification, to allow users to specify the details of the Kubernetes cluster where the node pool should be deployed. This section will include the target cluster's URL (Kubernetes cluster where resources for this node pool will be created) and the secret containing the kubeconfig data for that cluster. 
@@ -101,7 +109,7 @@ In a stretch Kafka cluster, we'll need bootstrap and broker services to be prese
 #### Cross-cluster communication
 Kafka controllers/brokers are distributed across multiple Kubernetes environments and will need to communicate with each other. Currently, the Strimzi Kafka operator defines Kafka listeners for internal communication (controlplane and replication) between brokers/controllers (Kubernetes services using ports 9090 and 9091). The user is not able to influence how these services are set up and exposed outside the cluster. We would remove this limitation and allow users to define how these internal listeners are configured in the Kafka resource, just like they do for Kafka client listeners.
 
-Users will also be able to override listener configurations in each KafkaNodePool resource, if the listeners need to be exposed in different ways (ingress host names, Ingress annotations etc.) for each Kubernetes cluster. This will be similar to how KafkaNodePools are used to override other configuration like storage etc. To override a listener, KafkaNodePool will define configuration with same listner name as in Kafka resource.
+Users will also be able to override listener configurations in each KafkaNodePool resource, if the listeners need to be exposed in different ways (ingress host names, Ingress annotations etc.) for each Kubernetes cluster. This will be similar to how KafkaNodePools are used to override other configuration like storage etc. To override a listener, KafkaNodePool will define configuration with same listener name as in Kafka resource.
 
 #### Resource cleanup on remote Kubernetes clusters
 As some of the Kubernetes resources will be created on a remote cluster, we will not be able to use standard Kubernetes approaches for deleting resources based on owner references. The operator will need to delete remote resources explicitly when the owning resource is deleted. 
@@ -132,11 +140,11 @@ This proposal only impacts strimzi-kafka-operator project.
 
 ## Rejected alternatives
 
-- Use network technologies like skupper, submariner etc to allow internal services to be visible on other clusters
-  -  introduces additional dependencies and complexity to the Strimzi project
+### Alternative network technologies:
 
-<img width="1057" alt="image" src="https://media.github.ibm.com/user/473362/files/9a9720f9-9ccf-4d4f-a56c-9a35917af711">
+Alternative network technologies like skupper, submariner etc to allow internal services to be visible on other clusters. This could simplify the networking needed but it introduces additional dependencies and complexity to the Strimzi project
 
+### Synchronize resources:
 
 An alternative approach considered was setting up a stretch Kafka cluster with synchronized `KafkaStretchCluster` and `Kafka` custom resources (CRs). The idea was to introduce a new CR called `KafkaStretchCluster`, which would contain details of all the clusters involved in the stretch Kafka deployment. The spec would include information such as cluster names, secrets for connecting to each Kubernetes cluster, and a list of node pools across the entire stretch cluster.
 
