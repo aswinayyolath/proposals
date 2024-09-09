@@ -8,7 +8,19 @@ At present, the availability of Strimzi-managed Kafka clusters is directly tied 
 
 ## Motivation
 
-By evenly distributing Kafka nodes across multiple Kubernetes clusters, a stretch Kafka cluster can tolerate outages of individual Kubernetes clusters, and continue to serve clients seamlessly.
+A stretch Kafka cluster allows Kafka nodes to be distributed across multiple Kubernetes clusters, significantly enhancing resilience by enabling the system to tolerate the outage of an entire Kubernetes cluster without disrupting service to clients. This configuration ensures high availability and seamless client operations, even in the event of cluster-specific failures.
+
+In addition to improving fault tolerance, this approach also facilitates other valuable use cases, such as
+
+- **Migration Flexibility**: The ability to move Kafka clusters between Kubernetes environments without downtime, supporting maintenance or migrations.
+- **Resource Optimization**: Efficiently utilizing resources across multiple clusters, which can be advantageous in environments with varying cluster capacities or during scaling operations.
+
+### Limitations and Considerations
+While a stretch Kafka cluster offers several advantages, it also introduces some challenges and considerations:
+
+- **Increased Network Complexity and Costs**: The communication between brokers and controllers across clusters relies on network connectivity, which can be less reliable and more costly than intra-cluster communication. This necessitates careful consideration of network architecture and associated costs.
+
+- **Latency Requirements**: The stretch Kafka cluster is best suited for environments with low-latency network connections between the Kubernetes clusters. High latency can adversely affect the performance and synchronization of Kafka nodes, potentially leading to delays or errors in replication and client communication. Defining the minimal acceptable latency between clusters is crucial to ensure optimal performance.
 
 ## Proposal
 
