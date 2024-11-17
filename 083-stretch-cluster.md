@@ -1,21 +1,21 @@
 # Stretch Kafka cluster
 
 The Strimzi Kafka operator currently manages Kafka clusters within a single Kubernetes cluster.
-This proposal aims to extend support to stretch Kafka clusters, where brokers and controllers of a single Kafka cluster are distributed across multiple Kubernetes clusters.
+This proposal aims to extend this support to stretch Kafka clusters, where brokers and controllers of a single Kafka cluster are distributed across multiple Kubernetes clusters.
 
 ## Current situation
 
-At present, the availability of Strimzi-managed Kafka clusters is directly tied to the availability of the underlying Kubernetes cluster.
+At present, the availability of Strimzi-managed Kafka clusters is limited by the availability of the underlying Kubernetes cluster.
 If a Kubernetes cluster experiences an outage, the entire Kafka cluster becomes unavailable, disrupting all connected Kafka clients.
 
 ## Motivation
 
-A stretch Kafka cluster allows Kafka nodes to be distributed across multiple Kubernetes clusters, significantly enhancing resilience by enabling the system to tolerate the outage of an entire Kubernetes cluster without disrupting service to clients.
-This configuration ensures high availability and seamless client operations, even in the event of cluster-specific failures.
+A stretch Kafka cluster allows Kafka nodes to be distributed across multiple Kubernetes clusters. This approach also facilitates maby valuable use cases, such as:
 
-In addition to improving fault tolerance, this approach also facilitates other valuable use cases, such as:
+- **High Availability**: Distributing Kafka brokers across multiple Kubernetes cluster significantly enhances resilience by enabling the system to tolerate the outage of a Kubernetes cluster without disrupting service to clients.
 
-- **Migration Flexibility**: The ability to move Kafka clusters between Kubernetes environments without downtime, supporting maintenance or migrations.
+- **Migration Flexibility**: The ability to move Kafka nodes between Kubernetes environments without downtime, supporting maintenance or migrations.
+
 - **Resource Optimization**: Efficiently utilizing resources across multiple clusters, which can be advantageous in environments with varying cluster capacities or during scaling operations.
 
 ### Limitations and Considerations
@@ -24,18 +24,20 @@ While a stretch Kafka cluster offers several advantages, it also introduces some
 - **Increased Network Complexity and Costs**: The communication between brokers and controllers across clusters relies on network connectivity, which can be less reliable and more costly than intra-cluster communication.
 This necessitates careful consideration of network architecture and associated costs.
 
-- **Latency Requirements**: The stretch Kafka cluster is best suited for environments with low-latency network connections between the Kubernetes clusters.High latency can adversely affect the performance and synchronization of Kafka nodes, potentially leading to delays or errors in replication and client communication.
+- **Latency Requirements**: Stretch Kafka clusters are best suited for environments with low-latency network connections between the Kubernetes clusters.
+High latency can adversely affect the performance and synchronization of Kafka nodes, potentially leading to delays or errors in replication and client communication.
 Defining the minimal acceptable latency between clusters is crucial to ensure optimal performance.
 
 ## Proposal
 
 This proposal seeks to enhance the Strimzi Kafka operator to support stretch Kafka clusters, distributing brokers and controllers across multiple Kubernetes clusters.
-The intent is to focus on high-availability of the data plane.The proposal outlines high-level topology and design concepts for such deployments, with a plan to incrementally include finer design and implementation details for various aspects.
+The intent is to focus on high-availability of the data plane.
+The proposal outlines high-level topology and design concepts for such deployments, with a plan to incrementally include finer design and implementation details for various aspects.
 
 ### Prerequisites
 
 - **Multiple Kubernetes Clusters**: Stretch Kafka clusters will require multiple Kubernetes clusters.
-Ideally, an odd number of clusters (at least three) is needed to maintain quorum in the event of a cluster outage.
+Ideally, an odd number of clusters (at least three) will be needed to maintain Kafka controller quorum and tolerate a Kubernetes cluster outage.
 
 - **Low Latency**: Kafka clusters should be deployed in environments that allow low-latency communication between Kafka brokers and controllers.
 Stretch Kafka clusters should be deployed in environments such as data centers or availability zones within a single region, and not across distant regions where high latency could impair performance.
@@ -45,7 +47,7 @@ While Zookeeper-based deployments are still supported, they are outside the scop
 
 ### Design
 
-The cluster operator will be deployed in all Kubernetes clusters and will manage Kafka brokers/controllers running on that cluster.
+The cluster operator will be deployed in all Kubernetes clusters and will manage Kafka brokers and controllers running on that cluster.
 One Kubernetes cluster will act as the control point for defining custom resources (Kafka, KafkaNodePool) required for stretch Kafka cluster.
 The KafkaNodePool custom resource will be extended to include information about a Kubernetes cluster where the pool should be deployed.
 The cluster operator will create necessary resources (StrimziPodSets, services etc.) on the target clusters specified within the KafkaNodePool resource.
