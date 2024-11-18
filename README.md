@@ -96,7 +96,6 @@ This repository lists proposals for the Strimzi project. A template for new prop
 | 2  | [Documentation improvements](./002-documentation-improvements.md) |
 | 1  | [Move Strimzi Kafka operators to Java 11](./001-move-strimzi-kafka-operators-to-java-11.md) |
 
-
 ---
 
 Strimzi is a <a href="http://cncf.io">Cloud Native Computing Foundation</a> incubating project.
