@@ -45,9 +45,9 @@ Stretch Kafka clusters should be deployed in environments such as data centers o
 - **KRaft**: As Kafka and Strimzi transition towards KRaft-based clusters, this proposal focuses exclusively on enabling stretch deployments for KRaft-based Kafka clusters.
 While Zookeeper-based deployments are still supported, they are outside the scope of this proposal.
 
-- **A supported Cloud Native Network technology**: To enable networking between Kubernetes clusters currently requires an additional technology stack.
+- **A supported cloud native network technology**: To enable networking between Kubernetes clusters currently requires an additional technology stack.
 The remainder of this proposal and the prototype detailed within assumes the use of [Submariner](https://submariner.io/), although there is potential for [Cilium](https://cilium.io/) support in a future revision.
-The [Istio](https://istio.io/) service mesh has some experimental support for [Kubernetes Multi-Cluster Services (MCS)](https://multicluster.sigs.k8s.io/concepts/multicluster-services-api/) that might warrant further research.
+The [Istio](https://istio.io/) service mesh has some experimental support for [Kubernetes Multi-Cluster Services (MCS)](https://multicluster.sigs.k8s.io/concepts/multicluster-services-api/) that might also warrant further research.
 
 
 ### Design
@@ -56,10 +56,13 @@ The [Istio](https://istio.io/) service mesh has some experimental support for [K
 
 ![Stretch cluster topology](./images/095-stretch-cluster-topology.png)
 
-The diagram illustrates a topology comprising of three Kubernetes clusters. 
+The diagram illustrates a topology comprising of three Kubernetes clusters.
+
 One of these clusters is designated as the "Central cluster", while any additional clusters are considered "remote".
 The central cluster acts as the control plane where a user will create their Kafka cluster and Kafka node pool definitions (Custom Resources).
+
 A Kafka node pool definition can be configured to run on any of the Kubernetes clusters, including the central cluster.
+
 Operators deployed to remote clusters are only responsible for reconciling Strimzi pod set resources that are created remotely by the operator running in the central cluster.
 
 This approach will allow users to manage the definition of their stretch Kafka cluster in a single location.
@@ -162,9 +165,9 @@ A design for better management of Kubernetes clients for remote clusters is requ
 
 ## Additional considerations and reference information
 
-#### Example of Updated advertised.listener and controller.quorum.voters
+#### Example of multi-cluster advertised.listener and controller.quorum.voters
 
-The Operator will update advertised.listener and controller.quorum.voters configurations as follows:
+The Operator will set advertised.listener and controller.quorum.voters configurations as follows:
 
 ```
 advertised.listeners=REPLICATION-9091://my-cluster-broker-0.cluster1.my-cluster-kafka-brokers.strimzi.svc.clusterset.local:9091,PLAIN-9092://my-cluster-broker-0.cluster1.my-cluster-kafka-brokers.strimzi.svc:9092,TLS-9093://my-cluster-broker-0.cluster1.my-cluster-kafka-brokers.strimzi.svc:9093
