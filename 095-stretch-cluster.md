@@ -100,8 +100,7 @@ _Note: This network identifier could have the same value as the Kubernetes clust
 
 The operator running in the central Kubernetes cluster must be provided with the following information to allow creation of resources in remote clusters:
 
-- An identifier for each remote Kubernetes cluster. 
-    - This is used for the "central" operator to build a map of remote Kubernetes clusters and their Kubernetes client configuration to control where resources are created.
+- An identifier for each remote Kubernetes cluster.
 - A URL endpoint for the Kubernetes API server running in each remote cluster.
 - Credential(s) to allow authentication with the remote Kubernetes API servers.
 
