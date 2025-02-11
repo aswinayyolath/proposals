@@ -37,7 +37,7 @@ The proposal outlines high-level topology and design concepts for such deploymen
 ### Prerequisites
 
 - **Multiple Kubernetes clusters**: Stretch Kafka clusters will require multiple Kubernetes clusters.
-Ideally, an odd number of clusters (at least three) will be needed to maintain Kafka controller quorum and tolerate a Kubernetes cluster outage.
+To ensure Kafka controller quorum in the event of a Kubernetes cluster outage, it is recommended to distribute controllers across at least three Kubernetes clusters. In a two cluster setup, there is a risk of losing quorum if the wrong cluster fails, which can lead to Kafka becoming unavailable.
 
 - **Low Latency**: Kafka clusters should be deployed in environments that allow low-latency communication between Kafka brokers and controllers.
 Stretch Kafka clusters should be deployed in environments such as data centers or availability zones within a single region, and not across distant regions where high latency could impair performance.
