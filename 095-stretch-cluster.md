@@ -45,9 +45,9 @@ Stretch Kafka clusters should be deployed in environments such as data centers o
 - **KRaft**: As Kafka and Strimzi transition towards KRaft-based clusters, this proposal focuses exclusively on enabling stretch deployments for KRaft-based Kafka clusters.
 While Zookeeper-based deployments are still supported, they are outside the scope of this proposal.
 
-- **A supported cloud native network technology**: To enable networking between Kubernetes clusters currently requires an additional technology stack.
-The remainder of this proposal and the prototype detailed within assumes the use of [Submariner](https://submariner.io/), although there is potential for [Cilium](https://cilium.io/) support in a future revision.
-
+- **A supported cloud native networking technology**: To enable networking between Kubernetes clusters currently requires an additional technology stack.
+The remainder of this proposal and the prototype detailed within assumes the use of [Submariner](https://submariner.io/) that provides an implementation of [Kubernetes Multi-Cluster Services (MCS)](https://multicluster.sigs.k8s.io/guides/#implementation-status).
+Other MCS implementations are expected to be viable, but have not yet been prototyped.
 
 ### Design
 
@@ -72,13 +72,13 @@ This approach will allow users to manage the definition of their stretch Kafka c
 A working prototype can be deployed based upon Submariner technology using the steps outlined in a [draft README](https://aswinayyolath.github.io/stretch-kafka-docs/) that is being iteratively revised.
 The following sections will describe the key aspects of the prototype highlighting areas that would benefit from community feedback and input.
 
-#### User configuration of the cross-cluster Kubernetes network
+#### User configuration of Kubernetes Multi-Cluster Service(s) (MCS)
 
-A cross-cluster network must be configured manually as a pre-requisite using a supported network technology.
-The existing prototype uses Submariner where a broker must be deployed to one of the Kubernetes clusters involved and each cluster must be joined to that broker.
+Multi-Cluster Services must be configured manually as a pre-requisite using a supported network technology.
+The prototype uses Submariner to setup the MCS across multiple Kubernetes clusters.
 This configuration must be performed by the user prior to deployment of Strimzi cluster operators.
 
-During this process, a unique identifier is set for each Kubernetes cluster joined to the Submariner network.
+Each Kubernetes cluster joined to the MCS is assigned a unique identifier.
 This identifier is used by the prototype central operator to build:
 1. Valid broker and controller service endpoints values for `advertised.listeners` and `controller.quorum.voters` within the appropriate ConfigMap resources.
 2. Broker certificates with appropriate Subject Alternative Names.
@@ -93,6 +93,8 @@ metadata:
     ...
     strimzi.io/submariner-cluster-id: "cluster1"
 ```
+
+_Note: The prototype operator code currently expects `submariner-cluster-id`, but this is subject to change for something more generic once additional technologies have been prototyped. One suggestion is `strimzi.io/cluster-network-id`._
 
 _Note: This network identifier could have the same value as the Kubernetes cluster identifier described in the following section and both aspects would benefit from community feedback and input._
 
