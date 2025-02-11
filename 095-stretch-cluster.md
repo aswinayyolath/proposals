@@ -59,7 +59,7 @@ The [Istio](https://istio.io/) service mesh has some experimental support for [K
 The diagram illustrates a topology comprising of three Kubernetes clusters.
 
 One of these clusters is designated as the "Central cluster", while any additional clusters are considered "remote".
-The central cluster acts as the control plane where a user will create their Kafka cluster and Kafka node pool definitions (Custom Resources).
+The central cluster acts as the control plane where a user will create all the custom resources for the Kafka cluster - Kafka, KafkaNodePool, KafkaUser, KafkaTopic etc.
 
 A Kafka node pool definition can be configured to run on any of the Kubernetes clusters, including the central cluster.
 
