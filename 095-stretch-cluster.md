@@ -47,7 +47,6 @@ While Zookeeper-based deployments are still supported, they are outside the scop
 
 - **A supported cloud native network technology**: To enable networking between Kubernetes clusters currently requires an additional technology stack.
 The remainder of this proposal and the prototype detailed within assumes the use of [Submariner](https://submariner.io/), although there is potential for [Cilium](https://cilium.io/) support in a future revision.
-The [Istio](https://istio.io/) service mesh has some experimental support for [Kubernetes Multi-Cluster Services (MCS)](https://multicluster.sigs.k8s.io/concepts/multicluster-services-api/) that might also warrant further research.
 
 
 ### Design
