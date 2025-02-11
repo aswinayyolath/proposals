@@ -63,7 +63,7 @@ The central cluster acts as the control plane where a user will create all the c
 
 A Kafka node pool definition can be configured to run on any of the Kubernetes clusters, including the central cluster.
 
-Operators deployed to remote clusters are only responsible for reconciling Strimzi pod set resources that are created remotely by the operator running in the central cluster.
+Operators deployed to remote clusters are only responsible for reconciling `StrimziPodSet` resources that are created remotely by the operator running in the central cluster.
 
 This approach will allow users to manage the definition of their stretch Kafka cluster in a single location.
 
