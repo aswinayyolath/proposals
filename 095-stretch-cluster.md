@@ -61,7 +61,8 @@ The diagram illustrates a topology comprising of three Kubernetes clusters.
 One of these clusters is designated as the "Central cluster", while any additional clusters are considered "remote".
 The central cluster acts as the control plane where a user will create all the custom resources for the Kafka cluster - Kafka, KafkaNodePool, KafkaUser, KafkaTopic etc.
 
-A Kafka node pool definition can be configured to run on any of the Kubernetes clusters, including the central cluster.
+A Kafka node pool definition can be configured to specify a Kubernetes cluster (central cluster or one of the member clusters) as the deployment target.
+The operator on the central cluster is responsible for creating all necessary resources (including StrimziPodSet resources) for the node pool on that specified Kubernetes cluster. 
 
 Operators deployed to remote clusters are only responsible for reconciling `StrimziPodSet` resources that are created remotely by the operator running in the central cluster.
 
