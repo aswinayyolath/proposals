@@ -10,7 +10,7 @@ If a Kubernetes cluster experiences an outage, the entire Kafka cluster becomes 
 
 ## Motivation
 
-A stretch Kafka cluster allows Kafka nodes to be distributed across multiple Kubernetes clusters. This approach also facilitates maby valuable use cases, such as:
+A stretch Kafka cluster allows Kafka nodes to be distributed across multiple Kubernetes clusters. This approach also facilitates many valuable use cases, such as:
 
 - **High Availability**: Distributing Kafka brokers across multiple Kubernetes cluster significantly enhances resilience by enabling the system to tolerate the outage of a Kubernetes cluster without disrupting service to clients.
 
