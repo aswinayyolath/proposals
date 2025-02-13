@@ -177,7 +177,6 @@ A design for better management of Kubernetes clients for remote clusters is requ
 The Operator configures advertised.listeners and controller.quorum.voters to support cross-cluster communication in a stretch Kafka deployment.
 
 
-```
 
 These updates ensure brokers and controllers can be discovered and communicate across clusters without relying on traditional external access methods.
 
