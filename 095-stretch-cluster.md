@@ -191,7 +191,6 @@ Even if cross-cluster ownership were possible, it would introduce another issue:
 
 As of now, we have not yet implemented a mechanism for controlled cleanup of remote resources when a user deliberately deletes the Kafka and KafkaNodePool CRs from the central cluster. Currently, when a user deletes these CRs, all related resources in the central cluster are removed, but remote cluster resources remain. Finding a smart way to handle this cleanup while avoiding unintended deletions is an open challenge.
 
-- The exact mechanism that will be used for such cleanup in various scenarios is not detailed out yet and will be added here before the proposal is complete.
 
 _TODO_: What does the prototype currently do?
 
