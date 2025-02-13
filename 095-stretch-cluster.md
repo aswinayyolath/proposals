@@ -185,7 +185,11 @@ controller.quorum.voters=101@my-cluster-controller-101.cluster2.my-cluster-kafka
 These updates ensure brokers and controllers can be discovered and communicate across clusters without relying on traditional external access methods.
 
 #### Resource cleanup on remote Kubernetes clusters
-As some of the Kubernetes resources will be created on a remote cluster, we will not be able to use standard Kubernetes approaches for deleting resources based on owner references.
+Currently, resources created in the remote clusters do not have OwnerReferences. The main reason is that the Kafka and KafkaNodePool CRs exist only in the central cluster. If resources in remote clusters were to reference them as owners, they would be immediately deleted by Kubernetes' garbage collection mechanism, since their owners don’t exist in the remote clusters.
+
+Even if cross-cluster ownership were possible, it would introduce another issue: if the central cluster were to go down, any resources in remote clusters with OwnerReferences pointing to central cluster resources would also be deleted automatically. This is not the intended behavior, as we want remote resources to remain operational even if the central cluster becomes temporarily unavailable.
+
+As of now, we have not yet implemented a mechanism for controlled cleanup of remote resources when a user deliberately deletes the Kafka and KafkaNodePool CRs from the central cluster. Currently, when a user deletes these CRs, all related resources in the central cluster are removed, but remote cluster resources remain. Finding a smart way to handle this cleanup while avoiding unintended deletions is an open challenge.
 The operator will need to delete remote resources explicitly when the owning resource is deleted.
 
 - The exact mechanism that will be used for such cleanup in various scenarios is not detailed out yet and will be added here before the proposal is complete.
