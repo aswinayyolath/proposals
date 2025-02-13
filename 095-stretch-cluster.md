@@ -174,20 +174,47 @@ A design for better management of Kubernetes clients for remote clusters is requ
 
 #### Example of multi-cluster advertised.listener and controller.quorum.voters
 
-The Operator configures advertised.listeners and controller.quorum.voters to support cross-cluster communication in a stretch Kafka deployment.
+The Operator configures `advertised.listeners` and `controller.quorum.voters` to support cross-cluster communication in a stretch Kafka deployment.
 
+**Default `advertised.listeners` format**
 
+In a regular (single Kubernetes cluster) deployment, the `advertised.listeners` configuration uses this format:
+
+```
+advertised.listeners=REPLICATION-9091://<broker-pod-name>.<broker-service-name>.<namespace>.svc:9091,
+PLAIN-9092://<broker-pod-name>.<broker-service-name>.<namespace>.svc:9092,
+TLS-9093://<broker-pod-name>.<broker-service-name>.<namespace>.svc:9093
+```
+
+**Modified format for a stretch Kafka cluster**
+
+When Kafka is deployed using "stretch mode", the operator modifies `advertised.listeners` to include a network identifier, such as the Submariner or Cilium `cluster-id`. The modified format is:
+
+```
+advertised.listeners=REPLICATION-9091://<broker-pod-name>.<cluster-id>.<broker-service-name>.<namespace>.svc.clusterset.local:9091,
+PLAIN-9092://<broker-pod-name>.<cluster-id>.<broker-service-name>.<namespace>.svc.clusterset.local:9092,
+TLS-9093://<broker-pod-name>.<cluster-id>.<broker-service-name>.<namespace>.svc.clusterset.local:9093
+```
+
+The `<cluster-id>` is dynamically retrieved from a label on the `KafkaNodePool` resource.
+
+**Modified `controller.quorum.voters` format**
+
+Similarly, `controller.quorum.voters` includes all Kafka controllers running in all of the Kubernetes clusters involved in the stretch Kafka cluster:
+
+```
+controller.quorum.voters=<controller-id>@<controller-pod-name>.<cluster-id>.<broker-service-name>.<namespace>.svc.clusterset.local:9090, ...
+```
 
 These updates ensure brokers and controllers can be discovered and communicate across clusters without relying on traditional external access methods.
 
 #### Resource cleanup on remote Kubernetes clusters
-Currently, resources created in the remote clusters do not have OwnerReferences. The main reason is that the Kafka and KafkaNodePool CRs exist only in the central cluster. If resources in remote clusters were to reference them as owners, they would be immediately deleted by Kubernetes' garbage collection mechanism, since their owners don’t exist in the remote clusters.
 
-Even if cross-cluster ownership were possible, it would introduce another issue: if the central cluster were to go down, any resources in remote clusters with OwnerReferences pointing to central cluster resources would also be deleted automatically. This is not the intended behavior, as we want remote resources to remain operational even if the central cluster becomes temporarily unavailable.
+Currently, resources created in the remote clusters do not have `OwnerReferences`. The main reason is that the `Kafka` and `KafkaNodePool` CRs exist only in the central cluster. If resources in remote clusters were to reference them as owners, they would be immediately deleted by Kubernetes' garbage collection mechanism since their owners do not exist in the remote clusters.
 
-As of now, we have not yet implemented a mechanism for controlled cleanup of remote resources when a user deliberately deletes the Kafka and KafkaNodePool CRs from the central cluster. Currently, when a user deletes these CRs, all related resources in the central cluster are removed, but remote cluster resources remain. Finding a smart way to handle this cleanup while avoiding unintended deletions is an open challenge.
+Even if ownership across Kubernetes cluster boundaries were possible, it would introduce another issue: if the central cluster were to go down, any resources in remote clusters with OwnerReferences pointing to central cluster resources would also be deleted automatically. This is not the intended behaviour, as we want remote resources to remain operational even if the central cluster becomes temporarily unavailable.
 
-
+The prototype does not yet have a mechanism for controlled cleanup of remote resources when a user deliberately deletes the Kafka and KafkaNodePool CRs from the central cluster. Currently, when a user deletes these CRs, all related resources in the central cluster are removed, but remote cluster resources remain. Finding a way to handle this cleanup while avoiding unintended deletions is an open challenge.
 
 #### Entity operator
 We would recommend that all KafkaTopic and KafkaUser resources are managed from the cluster that holds Kafka and KafkaNodePool resources, and that should be the cluster where the entity operator should be enabled.
