@@ -174,7 +174,7 @@ A design for better management of Kubernetes clients for remote clusters is requ
 
 #### Example of multi-cluster advertised.listener and controller.quorum.voters
 
-The Operator will set advertised.listener and controller.quorum.voters configurations as follows:
+The Operator configures advertised.listeners and controller.quorum.voters to support cross-cluster communication in a stretch Kafka deployment.
 
 ```
 advertised.listeners=REPLICATION-9091://my-cluster-broker-0.cluster1.my-cluster-kafka-brokers.strimzi.svc.clusterset.local:9091,PLAIN-9092://my-cluster-broker-0.cluster1.my-cluster-kafka-brokers.strimzi.svc:9092,TLS-9093://my-cluster-broker-0.cluster1.my-cluster-kafka-brokers.strimzi.svc:9093
